@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Peruvian Coast Upwelling: IB ESS HL Mini-Game</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#121b2e;
+      --muted:#8ea0c3;
+      --text:#e9f0ff;
+      --accent:#4dd4ff;
+      --good:#43f3a0;
+      --bad:#ff6b6b;
+      --warn:#ffd166;
+      --border:rgba(255,255,255,.12);
+    }
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,#070b14 0%, #0b1220 40%, #070b14 100%);
+      color:var(--text);
+      padding:18px;
+    }
+    .wrap{max-width:980px;margin:0 auto}
+    .topbar{
+      display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+    .title{
+      padding:14px 16px;border:1px solid var(--border);border-radius:16px;background:rgba(18,27,46,.7);
+      flex:1;min-width:280px;
+    }
+    .title h1{margin:0 0 6px 0;font-size:18px;letter-spacing:.2px}
+    .title p{margin:0;color:var(--muted);font-size:13px;line-height:1.35}
+    .stats{
+      padding:14px 16px;border:1px solid var(--border);border-radius:16px;background:rgba(18,27,46,.7);
+      min-width:220px;
+    }
+    .statrow{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}
+    .statrow span{color:var(--muted);font-size:12px}
+    .statrow b{font-size:12px}
+    .meter{
+      height:10px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(255,255,255,.10)
+    }
+    .meter > div{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--good));transition:width .35s ease}
+    .grid{
+      display:grid;gap:14px;
+      grid-template-columns: 1.15fr .85fr;
+    }
+    @media (max-width:860px){.grid{grid-template-columns:1fr}}
+    .card{
+      border:1px solid var(--border);border-radius:16px;background:rgba(18,27,46,.75);
+      padding:14px 14px 12px 14px;
+    }
+    .card h2{margin:0 0 8px 0;font-size:15px}
+    .hint{color:var(--muted);font-size:12px;line-height:1.35;margin:0 0 10px 0}
+    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+    .tab{
+      border:1px solid var(--border);border-radius:999px;padding:8px 10px;
+      background:rgba(255,255,255,.04);cursor:pointer;font-size:12px;color:var(--text);
+      transition:transform .06s ease, background .2s ease;
+      user-select:none;
+    }
+    .tab:active{transform:scale(.99)}
+    .tab.active{background:rgba(77,212,255,.14);border-color:rgba(77,212,255,.35)}
+    .passage{
+      border:1px solid rgba(255,255,255,.10);border-radius:14px;
+      background:rgba(255,255,255,.03);padding:12px;
+      max-height:320px;overflow:auto;
+      font-size:13px;line-height:1.45;
+    }
+    .passage b{color:#cfe3ff}
+    .badge{
+      display:inline-block;padding:3px 8px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);
+      font-size:11px;color:var(--muted);margin-left:6px;
+    }
+    .qbox{margin-top:10px}
+    .qhead{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      margin:8px 0 10px 0;
+    }
+    .qhead h3{margin:0;font-size:14px}
+    .qmeta{color:var(--muted);font-size:12px}
+    .options{display:grid;gap:8px}
+    .opt{
+      width:100%;
+      text-align:left;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.04);
+      border-radius:14px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-size:13px;
+      color:var(--text);
+      transition:background .2s ease,border-color .2s ease, transform .06s ease;
+    }
+    .opt:hover{background:rgba(255,255,255,.06)}
+    .opt:active{transform:scale(.99)}
+    .opt.correct{
+      border-color:rgba(67,243,160,.55);
+      background:rgba(67,243,160,.12);
+    }
+    .opt.wrong{
+      border-color:rgba(255,107,107,.55);
+      background:rgba(255,107,107,.10);
+    }
+    .feedback{
+      margin-top:10px;
+      border-radius:14px;
+      padding:10px 12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.03);
+      font-size:13px;
+      line-height:1.4;
+    }
+    .feedback.good{border-color:rgba(67,243,160,.35)}
+    .feedback.bad{border-color:rgba(255,107,107,.35)}
+    .actions{
+      display:flex;gap:10px;flex-wrap:wrap;margin-top:10px
+    }
+    .btn{
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.05);
+      color:var(--text);
+      padding:10px 12px;border-radius:14px;
+      cursor:pointer;font-size:13px;
+      transition:background .2s ease, transform .06s ease;
+      user-select:none;
+    }
+    .btn:hover{background:rgba(255,255,255,.07)}
+    .btn:active{transform:scale(.99)}
+    .btn.primary{
+      border-color:rgba(77,212,255,.40);
+      background:rgba(77,212,255,.14);
+    }
+    .btn.primary:hover{background:rgba(77,212,255,.18)}
+    .mini{
+      display:grid;gap:10px;
+    }
+    .chiprow{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .chip{
+      padding:8px 10px;border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.04);
+      cursor:pointer;font-size:12px;color:var(--text);
+      user-select:none;
+    }
+    .chip.active{border-color:rgba(255,209,102,.45);background:rgba(255,209,102,.14)}
+    .note{
+      color:var(--muted);font-size:12px;line-height:1.4;margin:0
+    }
+    .final{
+      display:none;margin-top:12px
+    }
+    .final h2{margin:0 0 8px 0;font-size:15px}
+    .final p{margin:0 0 8px 0;color:var(--muted);font-size:13px;line-height:1.4}
+    .rubric{
+      display:grid;gap:8px;margin-top:8px
+    }
+    .rubric .row{
+      display:flex;justify-content:space-between;gap:10px;
+      padding:10px 12px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.03);
+      font-size:13px
+    }
+    .rubric .row b{font-weight:600}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="title">
+      <h1>Peruvian Coast Upwelling: IB ESS HL Mini-Game</h1>
+      <p>
+        Read the case study text, then answer questions. You earn points for accurate <b>cause → process → outcome</b> reasoning
+        about upwelling, nutrients (N &amp; P), productivity, and fisheries.
+      </p>
+    </div>
+    <div class="stats">
+      <div class="statrow"><span>Progress</span><b id="progTxt">0 / 8</b></div>
+      <div class="meter" aria-label="progress"><div id="progBar"></div></div>
+      <div style="height:10px"></div>
+      <div class="statrow"><span>Score</span><b id="scoreTxt">0</b></div>
+      <div class="statrow"><span>Streak</span><b id="streakTxt">0</b></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT: Reading panel -->
+    <div class="card">
+      <h2>Case study reading <span class="badge">Read first</span></h2>
+      <p class="hint">Use the tabs. Then answer the questions on the right. You can return to the text anytime.</p>
+
+      <div class="tabs" role="tablist" aria-label="reading tabs">
+        <div class="tab active" data-tab="t1" role="tab" aria-selected="true">Peruvian Coast</div>
+        <div class="tab" data-tab="t2" role="tab" aria-selected="false">How coastal upwelling works</div>
+        <div class="tab" data-tab="t3" role="tab" aria-selected="false">Seasonality + nutrients</div>
+        <div class="tab" data-tab="t4" role="tab" aria-selected="false">Fisheries link</div>
+      </div>
+
+      <div class="passage" id="passage">
+        <!-- filled by JS -->
+      </div>
+
+      <div class="chiprow" aria-label="highlight helpers">
+        <div class="chip" data-highlight="cause">Highlight causes</div>
+        <div class="chip" data-highlight="process">Highlight processes</div>
+        <div class="chip" data-highlight="outcome">Highlight outcomes</div>
+      </div>
+
+      <p class="note" style="margin-top:10px">
+        Tip: In ESS HL, aim for a systems chain. Example: <b>wind → offshore transport → deep water rises → nutrients ↑ → phytoplankton ↑ → anchovies ↑</b>.
+      </p>
+    </div>
+
+    <!-- RIGHT: Quiz panel -->
+    <div class="card">
+      <h2>Challenge mode <span class="badge">Answer</span></h2>
+
+      <div class="qbox">
+        <div class="qhead">
+          <h3 id="qTitle">Question 1</h3>
+          <div class="qmeta" id="qMeta">Choose the best answer</div>
+        </div>
+
+        <div id="qPrompt" style="font-size:13px;line-height:1.4;margin-bottom:10px;color:var(--text)"></div>
+
+        <div class="options" id="options"></div>
+
+        <div id="feedback" class="feedback" style="display:none"></div>
+
+        <div class="actions">
+          <button class="btn" id="backBtn" type="button">Back</button>
+          <button class="btn primary" id="nextBtn" type="button">Next</button>
+          <button class="btn" id="resetBtn" type="button">Reset</button>
+        </div>
+
+        <div class="final" id="final">
+          <h2>Finish</h2>
+          <p id="finalMsg"></p>
+          <div class="rubric">
+            <div class="row"><span>Score</span><b id="finalScore">0</b></div>
+            <div class="row"><span>Accuracy</span><b id="finalAcc">0%</b></div>
+            <div class="row"><span>Best streak</span><b id="finalStreak">0</b></div>
+          </div>
+          <div class="actions" style="margin-top:10px">
+            <button class="btn primary" id="playAgainBtn" type="button">Play again</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // -----------------------
+  // Reading text (student-friendly, based on your case study screenshots)
+  // -----------------------
+  const reading = {
+    t1: `
+<b>Peruvian Coast: why it is so productive</b><br>
+Coastal waters off Peru are unusually rich because <b>coastal upwelling</b> brings <b>nutrient-rich deep water</b> to the surface.
+Although surface waters have lots of light, they can be nutrient-poor. Deep water contains nutrients (especially <b>nitrates</b> and <b>phosphates</b>) that support phytoplankton growth.
+Upwelling helps connect <b>nutrients</b> with <b>sunlight</b>, which increases <b>primary productivity</b> and supports major fisheries (for example, anchovies).`,
+
+    t2: `
+<b>How coastal upwelling works (process)</b><br>
+1) Winds blow along the coastline.<br>
+2) Surface water is pushed <b>offshore</b> (away from the coast).<br>
+3) Cold, deep water rises to replace the displaced surface water.<br>
+4) The rising deep water is <b>nutrient-rich</b> (N and P), increasing phytoplankton growth near the surface.<br><br>
+Key point: upwelling is a physical process that creates a biological response.`,
+
+    t3: `
+<b>Seasonality + nutrient availability</b><br>
+Upwelling strength can change across the year. When upwelling is stronger, more nutrients reach surface waters and productivity increases.
+When upwelling weakens, fewer nutrients are supplied and productivity tends to fall.
+Because phytoplankton respond quickly to nutrients, seasonal changes in upwelling often create <b>seasonal blooms</b> (or declines).`,
+
+    t4: `
+<b>Fisheries link (food web)</b><br>
+Nutrients (N and P) increase phytoplankton. Phytoplankton feed zooplankton. Zooplankton feed small fish like anchovies.
+If upwelling weakens (for example, due to changes in wind patterns), nutrients fall, phytoplankton decline, and fish populations can drop.
+This is why upwelling systems can be extremely productive but also sensitive to disruption.`
+  };
+
+  // Highlight helpers (very lightweight, to keep it readable)
+  const highlightSets = {
+    cause: ["winds", "blow", "wind patterns", "change"],
+    process: ["offshore", "rises", "replace", "upwelling", "deep water"],
+    outcome: ["nutrient", "phytoplankton", "productivity", "fisheries", "anchovies", "blooms"]
+  };
+
+  // -----------------------
+  // Quiz (8 questions)
+  // -----------------------
+  const quiz = [
+    {
+      title: "Question 1",
+      prompt: "What is the best definition of coastal upwelling?",
+      options: [
+        "Warm surface water sinks due to increased density.",
+        "Nutrient-rich deep water moves up to the surface, replacing offshore-moving surface water.",
+        "Rainfall increases salinity, making surface water denser."
+      ],
+      answer: 1,
+      explain: "Upwelling is the upward movement of cold, nutrient-rich deep water that replaces surface water pushed offshore."
+    },
+    {
+      title: "Question 2",
+      prompt: "In the Peru system, why is productivity often higher near the coast than in the open ocean?",
+      options: [
+        "Coastal waters always have more sunlight than the open ocean.",
+        "Upwelling supplies nitrates and phosphates to surface waters where light is available.",
+        "Open ocean water is too cold for phytoplankton to grow."
+      ],
+      answer: 1,
+      explain: "Light is available at the surface, but nutrients can be limiting—upwelling delivers the nutrients needed for phytoplankton growth."
+    },
+    {
+      title: "Question 3",
+      prompt: "Put the system chain in the correct order (cause → process → outcome).",
+      options: [
+        "Nutrients increase → wind pushes water offshore → deep water rises → phytoplankton bloom",
+        "Wind pushes water offshore → deep water rises → nutrients increase at surface → phytoplankton bloom",
+        "Deep water rises → wind pushes water offshore → phytoplankton bloom → nutrients increase"
+      ],
+      answer: 1,
+      explain: "The correct chain is wind-driven offshore transport → replacement by deep water → nutrients at surface → phytoplankton increase."
+    },
+    {
+      title: "Question 4",
+      prompt: "Which nutrient pair is most directly linked to increased phytoplankton growth in this case study?",
+      options: [
+        "Nitrogen and phosphorus",
+        "Carbon and oxygen",
+        "Iron and calcium"
+      ],
+      answer: 0,
+      explain: "Nitrates (N) and phosphates (P) are key limiting nutrients for phytoplankton in many marine systems."
+    },
+    {
+      title: "Question 5",
+      prompt: "If seasonal upwelling becomes weaker, what is the most likely short-term change near the surface?",
+      options: [
+        "Nutrient supply decreases and chlorophyll (phytoplankton) tends to decrease.",
+        "Nutrient supply increases and chlorophyll tends to increase.",
+        "Salinity always increases and fish populations always increase."
+      ],
+      answer: 0,
+      explain: "Less upwelling means fewer nutrients reach the surface, so phytoplankton and chlorophyll levels often decline."
+    },
+    {
+      title: "Question 6",
+      prompt: "Why can upwelling systems support large fisheries (like anchovies)?",
+      options: [
+        "They reduce biodiversity so one species dominates permanently.",
+        "They increase primary productivity at the base of the food web.",
+        "They eliminate the need for zooplankton in food chains."
+      ],
+      answer: 1,
+      explain: "More phytoplankton production supports more zooplankton and fish—so biomass can build up through the food web."
+    },
+    {
+      title: "Question 7",
+      prompt: "Which statement best describes why the open ocean gyres often have low chlorophyll?",
+      options: [
+        "They are dark, so photosynthesis cannot happen.",
+        "They are warm and strongly layered, so nutrients do not mix up from deeper water.",
+        "They contain no dissolved gases."
+      ],
+      answer: 1,
+      explain: "Strong layering limits vertical mixing, so surface waters stay nutrient-poor even with plenty of sunlight."
+    },
+    {
+      title: "Question 8",
+      prompt: "IB ESS HL thinking: Which is the strongest claim supported by this case study?",
+      options: [
+        "Upwelling links physical ocean processes to biological productivity and human food supply.",
+        "All coastal areas have equal fisheries because all coasts have upwelling.",
+        "Upwelling is controlled only by temperature, not by wind."
+      ],
+      answer: 0,
+      explain: "The case study shows a clear connection from wind-driven ocean processes to productivity and fisheries (ecosystem services)."
+    }
+  ];
+
+  // -----------------------
+  // State
+  // -----------------------
+  let qIndex = 0;
+  let score = 0;
+  let streak = 0;
+  let bestStreak = 0;
+  let answered = Array(quiz.length).fill(false);
+  let correctCount = 0;
+
+  const progTxt = document.getElementById("progTxt");
+  const progBar = document.getElementById("progBar");
+  const scoreTxt = document.getElementById("scoreTxt");
+  const streakTxt = document.getElementById("streakTxt");
+
+  const qTitle = document.getElementById("qTitle");
+  const qMeta = document.getElementById("qMeta");
+  const qPrompt = document.getElementById("qPrompt");
+  const optionsEl = document.getElementById("options");
+  const feedbackEl = document.getElementById("feedback");
+
+  const nextBtn = document.getElementById("nextBtn");
+  const backBtn = document.getElementById("backBtn");
+  const resetBtn = document.getElementById("resetBtn");
+
+  const finalBox = document.getElementById("final");
+  const finalMsg = document.getElementById("finalMsg");
+  const finalScore = document.getElementById("finalScore");
+  const finalAcc = document.getElementById("finalAcc");
+  const finalStreakEl = document.getElementById("finalStreak");
+  const playAgainBtn = document.getElementById("playAgainBtn");
+
+  // -----------------------
+  // Reading tab logic
+  // -----------------------
+  const tabs = Array.from(document.querySelectorAll(".tab"));
+  const passage = document.getElementById("passage");
+  const chips = Array.from(document.querySelectorAll(".chip"));
+  let activeTab = "t1";
+  let activeHighlight = null;
+
+  function setTab(tabId){
+    activeTab = tabId;
+    tabs.forEach(t=>{
+      const on = t.dataset.tab === tabId;
+      t.classList.toggle("active", on);
+      t.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    renderPassage();
+  }
+
+  function applyHighlight(html){
+    if(!activeHighlight) return html;
+    const words = highlightSets[activeHighlight] || [];
+    let out = html;
+    words.forEach(w=>{
+      const re = new RegExp(`\\b(${w})\\b`, "gi");
+      out = out.replace(re, `<mark style="background:rgba(255,209,102,.18);color:inherit;padding:0 3px;border-radius:6px;border:1px solid rgba(255,209,102,.25)">$1</mark>`);
+    });
+    return out;
+  }
+
+  function renderPassage(){
+    const html = reading[activeTab] || "";
+    passage.innerHTML = applyHighlight(html);
+  }
+
+  tabs.forEach(t=>t.addEventListener("click", ()=>setTab(t.dataset.tab)));
+
+  chips.forEach(ch=>{
+    ch.addEventListener("click", ()=>{
+      const key = ch.dataset.highlight;
+      const nowOn = !(activeHighlight === key);
+      activeHighlight = nowOn ? key : null;
+      chips.forEach(c=>c.classList.remove("active"));
+      if(nowOn) ch.classList.add("active");
+      renderPassage();
+    });
+  });
+
+  // -----------------------
+  // Quiz render + scoring
+  // -----------------------
+  function updateStats(){
+    const done = answered.filter(Boolean).length;
+    progTxt.textContent = `${done} / ${quiz.length}`;
+    progBar.style.width = `${(done/quiz.length)*100}%`;
+    scoreTxt.textContent = score;
+    streakTxt.textContent = streak;
+  }
+
+  function renderQuestion(){
+    // hide final if not finished
+    finalBox.style.display = "none";
+    feedbackEl.style.display = "none";
+    feedbackEl.classList.remove("good","bad");
+
+    const q = quiz[qIndex];
+    qTitle.textContent = q.title;
+    qPrompt.textContent = q.prompt;
+
+    const done = answered.filter(Boolean).length;
+    qMeta.textContent = answered[qIndex] ? "Answered" : "Choose the best answer";
+
+    optionsEl.innerHTML = "";
+    q.options.forEach((txt, i)=>{
+      const btn = document.createElement("button");
+      btn.className = "opt";
+      btn.type = "button";
+      btn.textContent = txt;
+
+      if(answered[qIndex]){
+        // lock state
+        btn.disabled = true;
+        if(i === q.answer) btn.classList.add("correct");
+      } else {
+        btn.addEventListener("click", ()=>selectOption(i, btn));
+      }
+
+      optionsEl.appendChild(btn);
+    });
+
+    backBtn.disabled = (qIndex === 0);
+    nextBtn.textContent = (qIndex === quiz.length - 1) ? "Finish" : "Next";
+    updateStats();
+  }
+
+  function selectOption(i, btn){
+    if(answered[qIndex]) return;
+    const q = quiz[qIndex];
+
+    answered[qIndex] = true;
+
+    const correct = (i === q.answer);
+    const allOpts = Array.from(document.querySelectorAll(".opt"));
+    allOpts.forEach((b, idx)=>{
+      b.disabled = true;
+      if(idx === q.answer) b.classList.add("correct");
+    });
+
+    if(!correct){
+      btn.classList.add("wrong");
+      streak = 0;
+      score = Math.max(0, score - 1);
+      feedbackEl.classList.add("bad");
+      feedbackEl.innerHTML = `<b style="color:var(--bad)">Not quite.</b> ${q.explain}`;
+    } else {
+      correctCount += 1;
+      streak += 1;
+      bestStreak = Math.max(bestStreak, streak);
+      score += 2;
+      feedbackEl.classList.add("good");
+      feedbackEl.innerHTML = `<b style="color:var(--good)">Correct.</b> ${q.explain}`;
+    }
+    feedbackEl.style.display = "block";
+    updateStats();
+  }
+
+  function showFinal(){
+    document.getElementById("qTitle").textContent = "Completed";
+    qPrompt.textContent = "";
+    optionsEl.innerHTML = "";
+    feedbackEl.style.display = "none";
+    finalBox.style.display = "block";
+
+    const acc = Math.round((correctCount/quiz.length)*100);
+    finalScore.textContent = String(score);
+    finalAcc.textContent = `${acc}%`;
+    finalStreakEl.textContent = String(bestStreak);
+
+    let msg = "Good work.";
+    if(acc >= 88) msg = "Excellent systems thinking: you linked wind, nutrients, productivity and fisheries clearly.";
+    else if(acc >= 63) msg = "Solid understanding. Improve by always using cause → process → outcome chains.";
+    else msg = "Re-read the tabs and focus on the system chain: wind → offshore transport → upwelling → nutrients → phytoplankton → fish.";
+
+    finalMsg.textContent = msg;
+
+    // update progress to 100%
+    progTxt.textContent = `${quiz.length} / ${quiz.length}`;
+    progBar.style.width = `100%`;
+  }
+
+  function next(){
+    if(qIndex === quiz.length - 1){
+      showFinal();
+      return;
+    }
+    qIndex += 1;
+    renderQuestion();
+  }
+  function back(){
+    if(qIndex === 0) return;
+    qIndex -= 1;
+    renderQuestion();
+  }
+  function resetAll(){
+    qIndex = 0;
+    score = 0;
+    streak = 0;
+    bestStreak = 0;
+    answered = Array(quiz.length).fill(false);
+    correctCount = 0;
+    renderQuestion();
+  }
+
+  nextBtn.addEventListener("click", next);
+  backBtn.addEventListener("click", back);
+  resetBtn.addEventListener("click", resetAll);
+  playAgainBtn.addEventListener("click", resetAll);
+
+  // init
+  setTab("t1");
+  renderQuestion();
+  updateStats();
+</script>
+</body>
+</html>
